@@ -1,6 +1,6 @@
 {
-	"name": "starter-pack",
-	"version": "1.0.0",
+	"name": "timpson-bonus-calculator",
+	"version": "0.0.1",
 	"private": true,
 	"packageManager": "bun@1.4.2",
 	"scripts": {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-APP_NAME="${APP_NAME:-my-app}"
+APP_NAME="${APP_NAME:-my-web-app}"
 CONTAINER_NAME="${APP_NAME}-web"
 IMAGE_TAG="${APP_NAME}:latest"
 IMAGE_TAR="image.tar"
