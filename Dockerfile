@@ -1,48 +1,65 @@
-# ---------- Build stage ----------
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1.7
+
+# ---------- Dependencies ----------
+FROM oven/bun:1-alpine AS deps
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat
+COPY package.json bun.lock ./
 
-# Enable corepack for pnpm
-RUN corepack enable pnpm
+RUN bun install --frozen-lockfile
 
-# 1) Cache lockfile & manifests
-COPY package.json pnpm-lock.yaml ./
+# ---------- Build ----------
+FROM oven/bun:1-alpine AS builder
 
-# 2) Install dependencies (frozen lockfile)
-RUN pnpm install --frozen-lockfile
+WORKDIR /app
 
-# 3) Copy source
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 4) Build
-ENV NEXT_TELEMETRY_DISABLED 1
-RUN pnpm build
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# ---------- Runtime stage ----------
+RUN mkdir -p /app/data
+
+RUN --mount=type=secret,id=build_env \
+	set -a; . /run/secrets/build_env; set +a; bun run build
+
+# ---------- Database migrations ----------
+FROM oven/bun:1-alpine AS migrator
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+COPY --from=builder /app/scripts ./scripts
+
+COPY --from=builder \
+  /app/configs/database/drizzle-sqlite.config.ts \
+  ./configs/database/drizzle-sqlite.config.ts
+
+COPY --from=builder \
+  /app/src/lib/database/schema \
+  ./src/lib/database/schema
+
+COPY --from=builder /app/drizzle ./drizzle
+# ---------- Runtime ----------
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 app-user
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 app-user
 
-# Copy standalone output
 COPY --from=builder --chown=app-user:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=app-user:nodejs /app/.next/static ./ .next/static
-COPY --from=builder --chown=app-user:nodejs /app/public ./public 2>/dev/null || true
+COPY --from=builder --chown=app-user:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=app-user:nodejs /app/public ./public
 
 USER app-user
-
 EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
 CMD ["node", "server.js"]
