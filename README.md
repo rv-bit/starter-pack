@@ -1,24 +1,24 @@
-This starter-pack will be using Cloudflare for domains etc, NGINX Proxy manager to configure reverse proxy these addresses.
+# This starter-pack will be using Cloudflare for domains etc, NGINX Proxy manager to configure reverse proxy these addresses.
 
-# Initial requirements to run on the personal machine and to install any necessary updates through SSH
+## Initial requirements to run on the personal machine and to install any necessary updates through SSH
 ```
 ssh root@<ipv4-address>
 apt update && apt upgrade -y
 ```
 
-# Adds user for deployment, you can name it anyway that you want but this should match everywhere, also this gives sudo access to user
+## Adds user for deployment, you can name it anyway that you want but this should match everywhere, also this gives sudo access to user
 ```
 adduser deploy-usr
 usermod -aG sudo deploy-usr
 ```
 
-# Docker installation and configuration for sudo access to user previously created
+## Docker installation and configuration for sudo access to user previously created
 ```
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 usermod -aG docker deploy-usr
 ```
-## Optional - it is usually downloaded with get-docker.sh
+### Optional - it is usually downloaded with get-docker.sh
 ```
 apt install -y docker-compose-plugin
 ```
@@ -28,14 +28,14 @@ docker --version
 docker compose version
 ```
 
-# Node and PM2 - Self explenatory, installs required node and pm2 for services and logs
+## Node and PM2 - Self explenatory, installs required node and pm2 for services and logs
 ```
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs
 npm install -g pm2
 ```
 
-# Configures Firewall for ports
+## Configures Firewall for ports
 ```
 ufw allow OpenSSH
 ufw allow 80/tcp
@@ -44,7 +44,7 @@ ufw allow 81/tcp   # NPM (NGINX) admin UI
 ufw enable
 ```
 
-# Switching to deploy-usr and generating all necessary folders/files
+## Switching to deploy-usr and generating all necessary folders/files
 ```
 su - deploy-usr
 ```
@@ -74,7 +74,7 @@ module.exports = {
 };
 ```
 
-# NGINX Proxy Manager setup
+## NGINX Proxy Manager setup
 ```
 cd ~/tools
 mkdir -p data letsencrypt
@@ -128,7 +128,7 @@ pm2 save
 pm2 startup
 ```
 
-# Create app folder
+## Create app folder
 This can be any name for the application specific, then for this choice it will use SQLite so we will create a data folder
 Here we can use any database name but should be used across configurations
 
@@ -143,7 +143,7 @@ cd data
 touch local.db
 ```
 
-# Github Configuration
+## Github Configuration
 In your repo Settings → Secrets and variables → Actions, add:
 
 - DO_HOST: your Droplet IP or domain IPV4
