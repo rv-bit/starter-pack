@@ -31,7 +31,7 @@ async function runMigration() {
 	const db = drizzle({ client: pool.pool });
 
 	await migrate(db, {
-		migrationsFolder: "./drizzle/gcp",
+		migrationsFolder: "./drizzle",
 	});
 
 	await pool.end();

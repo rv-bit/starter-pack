@@ -6,6 +6,8 @@ import { env } from "~/utils/environment/env.server";
 
 import * as schema from "./schema";
 
+type Database = ReturnType<typeof drizzle> | null
+
 const relations = defineRelations({ ...schema }, r => ({
 	user: {
 		sessions: r.many.session(),
@@ -32,8 +34,17 @@ const relations = defineRelations({ ...schema }, r => ({
 	},
 }));
 
-const client = createClient({ url: env.DATABASE_FILENAME! });
-const db = drizzle({ client, relations });
+let dbInstance: Database = null;
 
-export default db;
-export type Database = typeof db;
+function getDb() {
+	if (!dbInstance) {
+		const client = createClient({ url: env.DATABASE_FILENAME! });
+		dbInstance = drizzle({ client, relations });
+	}
+
+	return dbInstance;
+}
+
+export type { Database };
+
+export default getDb;

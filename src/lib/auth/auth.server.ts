@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 import { getBaseUrl } from "~/utils/helpers";
 
 import { trustedOrigins } from "~/lib/config.server";
-import db from "~/lib/database";
+import getDb from "~/lib/database";
 import * as schema from "~/lib/database/schema";
 import { sendEmail } from "~/lib/mail/mail.server";
 import * as EMAIL_TEMPLATES from "~/lib/mail/templates";
@@ -20,6 +20,8 @@ import { ac, admin, defaultRoles } from "./permissions";
 
 const APP_NAME = "Default";
 const isProduction = env.NODE_ENV === "production";
+
+const db = getDb();
 
 function createUniqueUsername(username: string) {
 	let uniqueUsername = username;
